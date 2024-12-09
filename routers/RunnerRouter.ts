@@ -4,4 +4,4 @@ import { codeUploader } from '../utils/UploaderMiddleware';
 
 export const runnerRouter = express.Router();
 
-runnerRouter.post("/run", codeUploader.single("code"), runCode);
+runnerRouter.post("/", codeUploader.single("code"), runCode);

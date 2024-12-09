@@ -9,6 +9,10 @@ if (!fs.existsSync(ROOT_DIR + "/uploads")) {
     fs.mkdirSync(ROOT_DIR + "/uploads");
 }
 
+if (!fs.existsSync(ROOT_DIR + "/tmp")) {
+    fs.mkdirSync(ROOT_DIR + "/tmp");
+}
+
 const fileZipFilter = (req: any, file: any, cb: any) => {
     const ext = path.extname(file.originalname);
     if (ext !== '.zip') {
@@ -21,13 +25,14 @@ const fileLanguageFilter = (req: any, file: any, cb: any) => {
     const ext = path.extname(file.originalname);
     for (const language in languageMap) {
         if (languageMap[language].ext === ext) {
+            req.body.language = language;
             return cb(null, true);
         }
     }
     return cb(new Error('Extention ' + ext + ' not supported'), false);
 };
 
-const storage = multer.diskStorage({
+const storageTestCases = multer.diskStorage({
     destination: function(req, file, cb) {
         cb(null, ROOT_DIR + "/uploads");
     },
@@ -36,14 +41,23 @@ const storage = multer.diskStorage({
     }
 });
 
+const storageCode = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, ROOT_DIR + "/tmp");
+    },
+    filename: function(req, file, cb) {
+        cb(null, "tmp_" + uuidv4() + path.extname(file.originalname));
+    }
+});
+
 export const testCasesUploader = multer({ 
-    storage: storage,
+    storage: storageTestCases,
     fileFilter: fileZipFilter,
     limits: { fileSize: 200 * 1024 * 1024 }
 });
 
 export const codeUploader = multer({ 
-    storage: storage,
+    storage: storageCode,
     fileFilter: fileLanguageFilter,
     limits: { fileSize: 50 * 1024 * 1024 }
 });

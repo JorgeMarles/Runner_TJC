@@ -6,7 +6,7 @@ import path from 'path';
 
 export const saveTestCases = async (req: Request, res: Response) => {
     try {
-        const problem_id = req.body.id_problem;
+        const problem_id = req.body.problem_id;
         if (!problem_id) {
             return res.status(400).json({ message: "The problem_id is required" });
         }
@@ -71,11 +71,11 @@ export const saveTestCases = async (req: Request, res: Response) => {
                 fs.writeFileSync(path.join(testCaseDir, outputFileName), outputData);
             }
             
-            return res.status(200).json({ message: "Archivos ZIP procesados con éxito", problem_id });
+            return res.status(200).json({ message: "Test cases processed successfully", problem_id });
         }
         catch (error: unknown) {
             if (error instanceof Error) {
-                return res.status(500).json({ message: "Error al procesar los archivos ZIP", error: error.message });
+                return res.status(500).json({ message: "Error processing the test cases", error: error.message });
             }
             else {
                 return res.status(400).send({ isUploaded: false, message: "Something went wrong" });
