@@ -30,17 +30,17 @@ export class CodeExecutor {
                 image: "python:3.10",
                 buildCommand: (fileName: string) => "",
                 runCommand: (fileName: string) => `python3 ${fileName}`,
-                ext: "txt"
+                ext: "py"
             },
             cpp: {
                 image: "gcc:latest",
-                buildCommand: (fileName: string) => `g++ -std=c++23 ${fileName} -o program`,
+                buildCommand: (fileName: string) => `g++ -std=c++23 ${fileName} -o program && `,
                 runCommand: (fileName: string) => `./program`,
                 ext: "cpp"
             },
             java: {
                 image: "openjdk:17",
-                buildCommand: (fileName: string) => `javac ${fileName}`,
+                buildCommand: (fileName: string) => `javac ${fileName} && `,
                 runCommand: (fileName: string) => `java ${fileName.replace(".java", "")}`,
                 ext: "java"
             }
@@ -66,7 +66,7 @@ export class CodeExecutor {
             container = await this.docker.createContainer({
                 Image: image,
                 Tty: false, 
-                Cmd: ["/bin/bash", "-c", `${buildCommand} && /usr/bin/time -f '%e' ${runCommand(`/code/${uniqueId}.${ext}`)}`],
+                Cmd: ["/bin/bash", "-c", `/usr/bin/time -f '%e' && ${buildCommand}${runCommand(`/code/${uniqueId}.${ext}`)}`],
                 HostConfig: {
                     Binds: [`${tempFilePath}:/code/${uniqueId}.${ext}`],
                     Memory: memoryLimit * 1024 * 1024,

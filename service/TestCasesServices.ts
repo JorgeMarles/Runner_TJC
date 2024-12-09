@@ -22,9 +22,9 @@ export const saveTestCases = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "The inputs or outputs files don't exits in the request" });
         }
         try {
-            if (path.extname(inputsFile.filename) != ".zip" || path.extname(outputsFile.filename) != ".zip") {
-                return res.status(400).json({ message: "The inputs and outputs files must be ZIP files" });
-            }
+            console.log(inputsFile.filename);
+            console.log(outputsFile.filename);
+            
             const inputsZipData = fs.readFileSync(inputsFile.path);
             const outputsZipData = fs.readFileSync(outputsFile.path);
 
