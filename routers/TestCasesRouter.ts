@@ -6,7 +6,7 @@ import multer from 'multer';
 export const testCasesRouter = express.Router();
 
 testCasesRouter.post("/uploadTests", testCasesUploader.fields([{ name: "inputs", maxCount: 1 }, { name: "outputs", maxCount: 1 }]), update);
-testCasesRouter.get("/getTests", find);
+testCasesRouter.get("/downloadTests", find);
 
 testCasesRouter.use((error: any, req: any, res: any, next: any) => {
     if (error instanceof multer.MulterError) {
