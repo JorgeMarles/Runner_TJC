@@ -79,7 +79,6 @@ export class CodeExecutor {
                     NanoCpus: 1000000000
                 }
             });
-            // Cmd: ["/bin/bash", "-c", `${buildCommand(`/code/${filename}`)}${runCommand(`/code/${filename}`)}`],
             // /usr/bin/time -f '%e'
             await container.start();
 

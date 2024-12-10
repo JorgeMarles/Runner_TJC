@@ -22,9 +22,6 @@ export const saveTestCases = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "The inputs or outputs files don't exits in the request" });
         }
         try {
-            console.log(inputsFile.filename);
-            console.log(outputsFile.filename);
-            
             const inputsZipData = fs.readFileSync(inputsFile.path);
             const outputsZipData = fs.readFileSync(outputsFile.path);
 
@@ -69,7 +66,12 @@ export const saveTestCases = async (req: Request, res: Response) => {
                 fs.writeFileSync(path.join(testCaseDir + "/input", inputFileName), inputData);
                 fs.writeFileSync(path.join(testCaseDir + "/output", outputFileName), outputData);
             }
-            
+
+            fs.mkdirSync(path.join(`${ROOT_DIR}/uploads`, `problem_${problem_id}`), { recursive: true });	
+            fs.copyFileSync(inputsFile.path, path.join(`${ROOT_DIR}/uploads`, `problem_${problem_id}`, `inputs.zip`));
+            fs.copyFileSync(outputsFile.path, path.join(`${ROOT_DIR}/uploads`, `problem_${problem_id}`, `outputs.zip`));
+            fs.rmSync(inputsFile.path);
+            fs.rmSync(outputsFile.path);
             return res.status(200).json({ message: "Test cases processed successfully", problem_id });
         }
         catch (error: unknown) {
@@ -82,7 +84,6 @@ export const saveTestCases = async (req: Request, res: Response) => {
         }
     }
     catch (error: unknown) {
-        console.log(error)
         if (error instanceof Error) {
             return res.status(400).send({ isUploaded: false, message: error.message });
         }
@@ -91,3 +92,24 @@ export const saveTestCases = async (req: Request, res: Response) => {
         }
     }
 };
+
+export const findTestCases = async (problem_id: string, res: Response) => {
+    try {
+        const testCaseDir = path.join(`${ROOT_DIR}/uploads`, `problem_${problem_id}`);
+        if (!fs.existsSync(testCaseDir)) {
+            return res.status(400).json({ message: "The test cases for problem " + problem_id + " don't exist" });
+        }
+        const inputFiles = fs.readFileSync(path.join(testCaseDir, "inputs.zip"));
+        const outputFiles = fs.readFileSync(path.join(testCaseDir, "output.zip"));
+        
+        return res.status(200).json({ inputs: inputFiles.toString('base64'), outputs: outputFiles.toString('base64') });
+    } 
+    catch (error) {
+        if (error instanceof Error) {
+            return res.status(500).json({ error: error.message });
+        }
+        else {
+            return res.status(400).send({ isUploaded: false, message: "Something went wrong" });
+        }
+    }
+}
