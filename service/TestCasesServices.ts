@@ -30,9 +30,6 @@ export const saveTestCases = async (req: Request, res: Response) => {
 
             const inputsZip = await JSZip.loadAsync(inputsZipData); 
             const outputsZip = await JSZip.loadAsync(outputsZipData);
-
-            const testCaseDir = path.join(ROOT_DIR, "testCases", `problem_${problem_id}`);
-            fs.mkdirSync(testCaseDir, { recursive: true });
             
             const inputFilenames = Object.keys(inputsZip.files);
             if (inputsZip.files.length != outputsZip.files.length) {
@@ -53,8 +50,10 @@ export const saveTestCases = async (req: Request, res: Response) => {
                 }
             }
 
+            const testCaseDir = path.join(ROOT_DIR, "testCases", `problem_${problem_id}`);
             fs.rmSync(testCaseDir, { recursive: true, force: true });
-            fs.mkdirSync(testCaseDir, { recursive: true });
+            fs.mkdirSync(path.join(testCaseDir, "/input"), { recursive: true });
+            fs.mkdirSync(path.join(testCaseDir, "/output"), { recursive: true });
 
             for (let i = 0; i < inputFilenames.length; ++i) {
                 const filename = path.basename(inputFilenames[i], path.extname(inputFilenames[i]));
@@ -67,8 +66,8 @@ export const saveTestCases = async (req: Request, res: Response) => {
                 const inputFileName = `input_${i + 1}.in`;
                 const outputFileName = `output_${i + 1}.out`;
 
-                fs.writeFileSync(path.join(testCaseDir, inputFileName), inputData);
-                fs.writeFileSync(path.join(testCaseDir, outputFileName), outputData);
+                fs.writeFileSync(path.join(testCaseDir + "/input", inputFileName), inputData);
+                fs.writeFileSync(path.join(testCaseDir + "/output", outputFileName), outputData);
             }
             
             return res.status(200).json({ message: "Test cases processed successfully", problem_id });

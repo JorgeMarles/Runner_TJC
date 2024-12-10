@@ -1,20 +1,20 @@
-export const languageMap: Record<string, { image: string; buildCommand: (fileName: string) => string; runCommand: (fileName: string) => string; ext: string; }> = {
+export const languageMap: Record<string, { image: string; buildCommand: (filename: string) => string; runCommand: (filename: string, inputFilename: string) => string; ext: string; }> = {
     "python": {
         image: "python:3.10",
-        buildCommand: (fileName: string) => "",
-        runCommand: (fileName: string) => `python3 ${fileName}`,
+        buildCommand: (filename: string) => "",
+        runCommand: (filename: string, inputFilename: string) => `python3 ${filename}`,
         ext: ".py"
     },
     "cpp": {
         image: "gcc:latest",
-        buildCommand: (fileName: string) => `g++ -std=c++23 ${fileName} -o program && `,
-        runCommand: (fileName: string) => `./program`,
+        buildCommand: (filename: string) => `g++ -std=c++23 /code/${filename} -o /code/program 2>&1`,
+        runCommand: (filename: string, inputFilename: string) => `./code/program < ${inputFilename} 2>&1`,
         ext: ".cpp"
     },
     "java": {
         image: "openjdk:17",
-        buildCommand: (fileName: string) => `javac ${fileName} && `,
-        runCommand: (fileName: string) => `java ${fileName.replace(".java", "")}`,
+        buildCommand: (filename: string) => `javac ${filename} && `,
+        runCommand: (filename: string, inputFilename: string) => `java ${filename.replace(".java", "")}`,
         ext: ".java"
     }
 };

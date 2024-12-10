@@ -46,7 +46,7 @@ const storageCode = multer.diskStorage({
         cb(null, ROOT_DIR + "/tmp");
     },
     filename: function(req, file, cb) {
-        cb(null, "tmp_" + uuidv4() + path.extname(file.originalname));
+        cb(null, uuidv4() + path.extname(file.originalname));
     }
 });
 
