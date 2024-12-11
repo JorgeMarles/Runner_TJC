@@ -43,11 +43,11 @@ function areFilesEqual(filePath1: string, filePath2: string): boolean {
 
 export class CodeExecutor {
     private docker: Docker;
-    private maximunExecutionTime: number;
+    // private maximunExecutionTime: number;
 
     constructor() {
         this.docker = new Docker();
-        this.maximunExecutionTime = 20000;
+        // this.maximunExecutionTime = 20000;
     }
 
     async executeCode(params: CodeExecutionParams): Promise<ExecutionResult> {
@@ -190,7 +190,7 @@ export class CodeExecutor {
                                 console.error("Failed to kill the process:", err);
                             }
                             reject(new Error("Timeout"));
-                        }, this.maximunExecutionTime);
+                        }, timeout);
                     });
         
                     const result = await Promise.race([timeoutPromise, executionPromise]);
@@ -201,7 +201,6 @@ export class CodeExecutor {
                         container?.remove({ force: true });
                         return result;
                     }
-                    console.log(result);
                     fs.writeFileSync(path.join(executionOutputsDirPath, outputs[i]), result.stdout);
                 }
                 catch (error) {
