@@ -4,3 +4,4 @@ testCases
 tmp
 dist
 .env
+docker-compose.yaml
