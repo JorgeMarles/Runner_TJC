@@ -50,6 +50,32 @@ export class CodeExecutor {
         // this.maximunExecutionTime = 20000;
     }
 
+    private async ensureImageExists(imageName: string): Promise<void> {
+        try {
+            await this.docker.getImage(imageName).inspect();
+            console.log(`Image ${imageName} already exists locally`);
+        } catch (error) {
+            console.log(`Image ${imageName} not found locally, pulling...`);
+            await new Promise((resolve, reject) => {
+                this.docker.pull(imageName, (err: any, stream: any) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+    
+                    this.docker.modem.followProgress(stream, (err: any, output: any) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+                        console.log(`Image ${imageName} pulled successfully`);
+                        resolve(output);
+                    });
+                });
+            });
+        }
+    }
+
     async executeCode(params: CodeExecutionParams): Promise<ExecutionResult> {
         const {problem_id, language, timeout, memoryLimit, filename, tempFilePath } = params;
 
@@ -69,6 +95,7 @@ export class CodeExecutor {
         fs.mkdirSync(executionOutputsDirPath, { recursive: true });
 
         try {
+            await this.ensureImageExists(image);
             container = await this.docker.createContainer({
                 Image: image,
                 Tty: false,
