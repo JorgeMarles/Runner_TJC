@@ -1,27 +1,31 @@
-# Base Image
-FROM node:lts-alpine AS base
+#Build stage
+FROM node:20-alpine AS build
+
 WORKDIR /app
-ENV NODE_ENV=production
 
-# Install dependencies (Only prod dependencies)
-FROM base AS deps
 COPY package*.json .
-RUN npm ci --omit=dev
 
-# Install dependencies + dev dependencies
-FROM deps AS build-deps
-ENV NODE_ENV=development
-RUN npm ci
+COPY .env .
 
-# Build
-FROM build-deps AS build
+RUN npm install
+
 COPY . .
+
 RUN npm run build
 
-# Production
-FROM base AS prod
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/dist .
-ENV PORT=8080
+#Production stage
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+COPY package*.json .
+
+COPY .env .
+
+RUN npm ci --only=production
+
+COPY --from=build /app/dist ./dist
+
 EXPOSE 8080
-ENTRYPOINT [ "node", "index.js" ]
+
+CMD ["node", "dist/index.js"]
