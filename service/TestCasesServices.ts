@@ -40,7 +40,7 @@ export const saveTestCases = async (req: Request, res: Response) => {
                     return res.status(400).json({ message: "The input files must have the .in extension" });
                 }
                 if (!outputEntry) {
-                    return res.status(400).json({ message: "The input file " + inputEntry + " don't have the same name in the output file" });
+                    return res.status(400).json({ message: "The input file " + inputEntry.name + " don't have the same name in the output file" });
                 }
                 if (inputEntry.dir || outputEntry.dir) {
                     return res.status(400).json({ message: "The input and output files can't be directories" });
