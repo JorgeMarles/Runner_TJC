@@ -194,7 +194,8 @@ export class CodeExecutor {
                         stream.on("end", async () => {
                             const { ExitCode } = await exec!.inspect();
                             if (ExitCode !== 0) {
-                                resolve({ stdout: stdout, stderr: stderr, status: "Compilation error", executionTime: 0, executionId: executionId });
+                                console.error("Compilation error:", stderr, stdout);
+                                resolve({ stdout: stdout, stderr: stderr, status: "Compilation error", executionTime: 0, executionId: executionId});
                             }
                             resolve({ stdout: "", stderr: "", status: "OK", executionTime: 0, executionId: executionId });
                         });
