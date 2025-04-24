@@ -20,7 +20,7 @@ export const run = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "The code file don't exits in the request" });
         }
         try {
-            const tempFilePath = req.file.path;
+            const tempFilePath = `./${req.file.path}`;
             const filename = req.file.filename;
             const codeExecutor = new CodeExecutor();
             const result = await codeExecutor.executeCode({ problem_id: problem_id, language: language, timeout: timeout, memoryLimit: memoryLimit, filename: filename, tempFilePath: tempFilePath });
