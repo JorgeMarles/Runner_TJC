@@ -3,7 +3,7 @@ import fs from "fs";
 import { languageMap } from "./LanguageMap";
 import { ROOT_DIR } from "../config";
 import path from "path";
-import tar from "tar"
+import * as tar from 'tar';
 import * as crypto from 'crypto';
 
 interface ExecutionResult {
@@ -50,25 +50,25 @@ async function createTar(tempFilePath: string, tarPath: string, xd?: string) {
             throw new Error(`El archivo no existe: ${tempFilePath}`);
         }
 
-        // Crea un stream para escribir el archivo .tar
-        const tarStream = fs.createWriteStream(tarPath);
-
         const tmp: string | undefined = tempFilePath.split('/').pop();
 
-        console.log("Creating tar from ", tempFilePath, " in path:", tarPath);
+        console.log("Creating tar from ", tmp, " in path:", tarPath);
 
 
         // Empaqueta usando tar.create y un stream
-        await tar.create(
+        await tar.c(
             {
+                gzip: false,
                 cwd: xd ?? `${ROOT_DIR}/tmp`, // Directorio base para el archivo
+                file: tarPath
             },
             [tmp!] // Agregar solo el archivo
-        ).pipe(tarStream);
+        );
 
         console.log('Archivo TAR creado con éxito:', tarPath);
     } catch (error) {
         console.error(error)
+        throw error;
     }
 }
 export class CodeExecutor {
