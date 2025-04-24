@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { CodeExecutor } from '../utils/CodeExecutor';
 import { ROOT_DIR } from "../config";
+import path from "path";
 
 export const run = async (req: Request, res: Response) => {
     try {
