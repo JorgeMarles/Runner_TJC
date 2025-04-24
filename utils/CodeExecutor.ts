@@ -43,26 +43,33 @@ function areFilesEqual(filePath1: string, filePath2: string): boolean {
 }
 
 async function createTar(tempFilePath: string, tarPath: string, xd?: string) {
-    
 
-    if (!fs.existsSync(tempFilePath)) {
-        throw new Error(`El archivo no existe: ${tempFilePath}`);
+    try {
+
+        if (!fs.existsSync(tempFilePath)) {
+            throw new Error(`El archivo no existe: ${tempFilePath}`);
+        }
+
+        // Crea un stream para escribir el archivo .tar
+        const tarStream = fs.createWriteStream(tarPath);
+
+        const tmp: string | undefined = tempFilePath.split('/').pop();
+
+        console.log("Creating tar from ", tempFilePath, " in path:", tarPath);
+
+
+        // Empaqueta usando tar.create y un stream
+        await tar.create(
+            {
+                cwd: xd ?? `${ROOT_DIR}/tmp`, // Directorio base para el archivo
+            },
+            [tmp!] // Agregar solo el archivo
+        ).pipe(tarStream);
+
+        console.log('Archivo TAR creado con éxito:', tarPath);
+    } catch (error) {
+        console.error(error)
     }
-
-    // Crea un stream para escribir el archivo .tar
-    const tarStream = fs.createWriteStream(tarPath);
-
-    const tmp: string | undefined = tempFilePath.split('/').pop();
-
-    // Empaqueta usando tar.create y un stream
-    await tar.create(
-        {
-            cwd: xd ?? `${ROOT_DIR}/tmp`, // Directorio base para el archivo
-        },
-        [tmp!] // Agregar solo el archivo
-    ).pipe(tarStream);
-
-    console.log('Archivo TAR creado con éxito:', tarPath);
 }
 export class CodeExecutor {
     private docker: Docker;
@@ -85,7 +92,7 @@ export class CodeExecutor {
                         reject(err);
                         return;
                     }
-    
+
                     this.docker.modem.followProgress(stream, (err: any, output: any) => {
                         if (err) {
                             reject(err);
@@ -133,7 +140,7 @@ export class CodeExecutor {
         const tarPath2 = `${ROOT_DIR}/tests.tar`;
         await createTar(tempFilePath, tarPath)
         await createTar(`${ROOT_DIR}/testCases`, tarPath2, ROOT_DIR)
-        
+
         try {
             await this.ensureImageExists(image);
             container = await this.docker.createContainer({
@@ -149,29 +156,29 @@ export class CodeExecutor {
             // /usr/bin/time -f '%e'
             await container.start();
 
-            try{
+            try {
                 const exec = await container.exec({
                     Cmd: ['chmod', '777', '/code'],
                     AttachStdout: true,
                     AttachStderr: true,
-                });                
+                });
                 const stream = await exec.start({});
                 stream.on('data', (chunk) => console.log(chunk.toString())); // Verifica errores de mkdir
                 stream.on('error', (chunk) => console.error(chunk.toString())); // Verifica errores de mkdir
-            }catch(error){
+            } catch (error) {
                 console.error(error)
             }
-            
-            try{
+
+            try {
                 const exec = await container.exec({
                     Cmd: ['chmod', '777', '/testCases'],
                     AttachStdout: true,
                     AttachStderr: true,
-                });                
+                });
                 const stream = await exec.start({});
                 stream.on('data', (chunk) => console.log(chunk.toString())); // Verifica errores de mkdir
                 stream.on('error', (chunk) => console.error(chunk.toString())); // Verifica errores de mkdir
-            }catch(error){
+            } catch (error) {
                 console.error(error)
             }
 
@@ -220,7 +227,7 @@ export class CodeExecutor {
                             const { ExitCode } = await exec!.inspect();
                             if (ExitCode !== 0) {
                                 console.error("Compilation error:", stderr, stdout);
-                                resolve({ stdout: stdout, stderr: stderr, status: "Compilation error", executionTime: 0, executionId: executionId});
+                                resolve({ stdout: stdout, stderr: stderr, status: "Compilation error", executionTime: 0, executionId: executionId });
                             }
                             resolve({ stdout: "", stderr: "", status: "OK", executionTime: 0, executionId: executionId });
                         });

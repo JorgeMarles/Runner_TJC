@@ -29,6 +29,7 @@ export const run = async (req: Request, res: Response) => {
             return res.status(200).json({ message: "Code executed successfully", result: result });
         }
         catch (error: unknown) {
+            console.error(error)
             if (error instanceof Error) {
                 return res.status(500).json({ message: "Runner error", error: error.message });
             }
@@ -38,7 +39,7 @@ export const run = async (req: Request, res: Response) => {
         }
     }
     catch (error: unknown) {
-        console.log(error)
+        console.error(error)
         if (error instanceof Error) {
             return res.status(400).send({ isExecuted: false, message: error.message });
         }
