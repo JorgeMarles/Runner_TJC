@@ -5,6 +5,7 @@ import { ROOT_DIR } from "../config";
 import path from "path";
 import * as tar from 'tar';
 import * as crypto from 'crypto';
+import { sendRegisterSubmission } from "../service/RabbitMQ";
 
 interface ExecutionResult {
     stdout: string;
@@ -16,6 +17,7 @@ interface ExecutionResult {
 
 interface CodeExecutionParams {
     problem_id: string;
+    user_id: string;
     language: string;
     timeout: number;
     memoryLimit: number;
@@ -107,7 +109,7 @@ export class CodeExecutor {
     }
 
     async executeCode(params: CodeExecutionParams): Promise<ExecutionResult> {
-        const { problem_id, language, timeout, memoryLimit, filename, tempFilePath } = params;
+        const { problem_id, user_id, language, timeout, memoryLimit, filename, tempFilePath } = params;
 
         console.log(tempFilePath);
         console.log(filename);
@@ -242,6 +244,7 @@ export class CodeExecutor {
                     await fs.promises.rm(tempFilePath, { recursive: true, force: true });
                     await fs.promises.rm(executionOutputsDirPath, { recursive: true, force: true });
                     container?.remove({ force: true });
+                    sendRegisterSubmission(executionId, parseInt(user_id), parseInt(problem_id), compilationResult.status, new Date());
                     return compilationResult;
                 }
             }
@@ -316,6 +319,7 @@ export class CodeExecutor {
                         await fs.promises.rm(tempFilePath, { recursive: true, force: true });
                         await fs.promises.rm(executionOutputsDirPath, { recursive: true, force: true });
                         container?.remove({ force: true });
+                        sendRegisterSubmission(executionId, parseInt(user_id), parseInt(problem_id), result.status, new Date());
                         return result;
                     }
                     fs.writeFileSync(path.join(executionOutputsDirPath, outputs[i]), result.stdout);
@@ -339,12 +343,14 @@ export class CodeExecutor {
             const expectedOutputPath = path.join(outputsPathDir, output);
 
             if (!areFilesEqual(executionOutputPath, expectedOutputPath)) {
+                sendRegisterSubmission(executionId, parseInt(user_id), parseInt(problem_id), 'Wrong Answer', new Date());
                 return { stdout: "", stderr: "", status: "Wrong answer", executionTime: maximunTestCaseExecutionTime, executionId: executionId };
             }
         }
 
         await fs.promises.rm(executionOutputsDirPath, { recursive: true, force: true });
 
+        sendRegisterSubmission(executionId, parseInt(user_id), parseInt(problem_id), 'Accepted', new Date());
         return { stdout: "", stderr: "", status: "Accepted", executionTime: maximunTestCaseExecutionTime, executionId: executionId };
     }
 }

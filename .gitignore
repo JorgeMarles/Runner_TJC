@@ -5,3 +5,4 @@ tmp
 dist
 .env
 docker-compose.yaml
+*.tar
