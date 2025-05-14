@@ -9,6 +9,7 @@ export const run = async (req: Request, res: Response) => {
         const timeout = req.body.timeout;
         const memoryLimit = req.body.memoryLimit;
         const language = req.body.language; 
+        const user_id = req.body.user_id;
         if (!problem_id) {
             return res.status(400).json({ message: "The problem_id is required" });
         }
@@ -21,11 +22,14 @@ export const run = async (req: Request, res: Response) => {
         if (!req.file) {
             return res.status(400).json({ message: "The code file don't exits in the request" });
         }
+        if (!user_id) {
+            return res.status(400).json({ message: "The user_id is required" });
+        }
         try {
             const tempFilePath = req.file.path;
             const filename = req.file.filename;
             const codeExecutor = new CodeExecutor();
-            const result = await codeExecutor.executeCode({ problem_id: problem_id, language: language, timeout: timeout, memoryLimit: memoryLimit, filename: filename, tempFilePath: tempFilePath });
+            const result = await codeExecutor.executeCode({ user_id: user_id, problem_id: problem_id, language: language, timeout: timeout, memoryLimit: memoryLimit, filename: filename, tempFilePath: tempFilePath });
             return res.status(200).json({ message: "Code executed successfully", result: result });
         }
         catch (error: unknown) {
