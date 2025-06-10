@@ -24,7 +24,13 @@ const run = async () => {
         }
         else console.error("Error connecting to RabbitMQ");
     }
-    app.listen(PORT, () => console.log(`Listening in port ${PORT}`));
+    app.get("/health", (req: express.Request, res: express.Response) => {
+        res.status(200).send("OK");
+    });
+    app.listen(PORT, async() => {
+        console.log(`Listening in port ${PORT}`);
+        await registerService();
+    })
 };
 
 run();
