@@ -5,7 +5,7 @@ import { ROOT_DIR } from "../config";
 import path from "path";
 import * as tar from 'tar';
 import * as crypto from 'crypto';
-import { sendRegisterSubmission } from "../service/RabbitMQ";
+import { sendRegisterSubmission, sendSubmissionUpdateMessage } from "../service/RabbitMQ";
 
 interface ExecutionResult {
     stdout: string;
@@ -75,11 +75,17 @@ async function createTar(tempFilePath: string, tarPath: string, xd?: string) {
 }
 export class CodeExecutor {
     private docker: Docker;
+    private id: string;
     // private maximunExecutionTime: number;
 
-    constructor() {
+    constructor(filename: string) {
         this.docker = new Docker();
+        this.id = path.basename(filename, path.extname(filename));
         // this.maximunExecutionTime = 20000;
+    }
+
+    public getId(): string {
+        return this.id;
     }
 
     private async ensureImageExists(imageName: string): Promise<void> {
@@ -245,10 +251,12 @@ export class CodeExecutor {
                     await fs.promises.rm(executionOutputsDirPath, { recursive: true, force: true });
                     container?.remove({ force: true });
                     sendRegisterSubmission(executionId, parseInt(user_id), parseInt(problem_id), compilationResult.status, new Date());
+                    sendSubmissionUpdateMessage("end", executionId, compilationResult.status, compilationResult.stdout, compilationResult.executionTime);
                     return compilationResult;
                 }
             }
             catch (error) {
+                sendSubmissionUpdateMessage("error", executionId, "Error", "Unexpected error", 0);
                 throw error;
             }
 
@@ -320,6 +328,7 @@ export class CodeExecutor {
                         await fs.promises.rm(executionOutputsDirPath, { recursive: true, force: true });
                         container?.remove({ force: true });
                         sendRegisterSubmission(executionId, parseInt(user_id), parseInt(problem_id), result.status, new Date());
+                        sendSubmissionUpdateMessage("end", executionId, result.status, result.stdout == '' ? result.stdout : result.stderr, result.executionTime);
                         return result;
                     }
                     fs.writeFileSync(path.join(executionOutputsDirPath, outputs[i]), result.stdout);
@@ -337,13 +346,14 @@ export class CodeExecutor {
         }
         await fs.promises.rm(tempFilePath, { recursive: true, force: true });
         container?.remove({ force: true });
-
+        let tcase = 1;
         for (let output of outputs) {
             const executionOutputPath = path.join(executionOutputsDirPath, output);
             const expectedOutputPath = path.join(outputsPathDir, output);
 
             if (!areFilesEqual(executionOutputPath, expectedOutputPath)) {
                 sendRegisterSubmission(executionId, parseInt(user_id), parseInt(problem_id), 'Wrong Answer', new Date());
+                sendSubmissionUpdateMessage("end", executionId, "Wrong answer", `Wrong answer in case ${tcase++}`, maximunTestCaseExecutionTime);
                 return { stdout: "", stderr: "", status: "Wrong answer", executionTime: maximunTestCaseExecutionTime, executionId: executionId };
             }
         }
@@ -351,6 +361,7 @@ export class CodeExecutor {
         await fs.promises.rm(executionOutputsDirPath, { recursive: true, force: true });
 
         sendRegisterSubmission(executionId, parseInt(user_id), parseInt(problem_id), 'Accepted', new Date());
+        sendSubmissionUpdateMessage("end", executionId, "Accepted", "OK", maximunTestCaseExecutionTime);
         return { stdout: "", stderr: "", status: "Accepted", executionTime: maximunTestCaseExecutionTime, executionId: executionId };
     }
 }

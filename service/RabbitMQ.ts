@@ -34,6 +34,9 @@ const rmq: RabbitMQUtils = {
     queuesOut: {
         'submission-stats': {
             queue: null,
+        },
+        'submission-update': {
+            queue: null
         }
     },
     channel: null
@@ -87,7 +90,15 @@ type SubmissionMessage = {
     data: SubmissionData;
 }
 
-type Message = SubmissionMessage;
+export type SubmissionUpdateInfo = {
+    id: string;
+    type_update?: "save" | "end" | "error"
+    veredict: string;
+    output: string;
+    time_running: number;
+}
+
+type Message = SubmissionMessage | SubmissionUpdateInfo;
 
 export const sendRegisterSubmission = async (submissionId: string, userId: number, problemId: number, veredict: string, submissionTime: Date) => {
     const message: Message = {
@@ -102,6 +113,19 @@ export const sendRegisterSubmission = async (submissionId: string, userId: numbe
     }
     await publishMessage('submission-stats', JSON.stringify(message));
     console.log(`Submission ${submissionId} registered`);
+}
+
+export const sendSubmissionUpdateMessage = async (type_update: "save" | "end" | "error", submissionId: string, veredict: string, output: string, time_running: number) => {
+    const message: SubmissionUpdateInfo = {
+        type_update,
+        id: submissionId,
+        output,
+        time_running,
+        veredict
+    }
+    await publishMessage('submission-update', JSON.stringify(message))
+    console.log(`Submission ${submissionId} updated`);
+    
 }
 
 const publishMessage = async (queue: string, message: string, options?: ampq.Options.Publish) => {
