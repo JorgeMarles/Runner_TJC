@@ -6,7 +6,7 @@ import cors from 'cors';
 import { testCasesRouter } from './routers/TestCasesRouter';
 import { runnerRouter } from './routers/RunnerRouter';
 import { connectRabbitMQ } from './service/RabbitMQ';
-import { registerService } from "./services/Consul";
+import { registerService } from "./service/Consul";
 
 const app = express();
 
