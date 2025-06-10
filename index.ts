@@ -6,6 +6,7 @@ import cors from 'cors';
 import { testCasesRouter } from './routers/TestCasesRouter';
 import { runnerRouter } from './routers/RunnerRouter';
 import { connectRabbitMQ } from './service/RabbitMQ';
+import { registerService } from "./service/Consul";
 
 const app = express();
 
@@ -24,7 +25,13 @@ const run = async () => {
         }
         else console.error("Error connecting to RabbitMQ");
     }
-    app.listen(PORT, () => console.log(`Listening in port ${PORT}`));
+    app.get("/health", (req: express.Request, res: express.Response) => {
+        res.status(200).send("OK");
+    });
+    app.listen(PORT, async() => {
+        console.log(`Listening in port ${PORT}`);
+        await registerService();
+    })
 };
 
 run();
